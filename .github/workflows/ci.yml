@@ -14,6 +14,22 @@ jobs:
   quality:
     name: lint / typecheck / test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: akrasia
+          POSTGRES_PASSWORD: akrasia
+          POSTGRES_DB: akrasia_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U akrasia -d akrasia_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgres://akrasia:akrasia@localhost:5432/akrasia_test
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +49,9 @@ jobs:
 
       - name: Format check
         run: npm run format:check
+
+      - name: Migrate up (test DB for Postgres-backed unit tests)
+        run: npm run db:migrate:up
 
       - name: Test
         run: npm test
@@ -72,6 +91,9 @@ jobs:
 
       - name: Seed demo dataset
         run: npm run db:seed
+
+      - name: Agent substrate smoke test (Postgres-backed)
+        run: npx vitest run src/agents/runtime.pg.test.ts
 
       - name: Prove reversibility (down + up)
         run: |
