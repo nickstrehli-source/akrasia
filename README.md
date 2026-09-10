@@ -6,15 +6,15 @@ This repo is the foundation only — no product features yet. See `AKR-3` on the
 
 ## Stack (boring on purpose)
 
-| Choice | Why (one line) |
-| --- | --- |
-| **TypeScript** | End-to-end types are non-negotiable for a data-model-heavy app touching money and access. |
-| **Next.js (App Router)** | Mainstream fullstack framework — UI, API routes, and SSR in one boring, well-supported binary. |
-| **React 19** | The framework's default; no reason to fight it. |
-| **PostgreSQL** | Relational data (properties → units → leases → tenants) is the natural shape; deferred to `AKR-4`. |
-| **Vitest** | Fast, TS-native, Jest-compatible test runner. |
-| **ESLint + Prettier** | Standard formatting/linting; wired into CI. |
-| **GitHub Actions** | Free CI for the runtime we already use; no extra vendor. |
+| Choice                     | Why (one line)                                                                                     |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| **TypeScript**             | End-to-end types are non-negotiable for a data-model-heavy app touching money and access.          |
+| **Next.js (App Router)**   | Mainstream fullstack framework — UI, API routes, and SSR in one boring, well-supported binary.     |
+| **React 19**               | The framework's default; no reason to fight it.                                                    |
+| **PostgreSQL**             | Relational data (properties → units → leases → tenants) is the natural shape; deferred to `AKR-4`. |
+| **Vitest**                 | Fast, TS-native, Jest-compatible test runner.                                                      |
+| **ESLint + Prettier**      | Standard formatting/linting; wired into CI.                                                        |
+| **GitHub Actions**         | Free CI for the runtime we already use; no extra vendor.                                           |
 | **GitHub Pages (staging)** | Free static hosting for the placeholder skeleton. Will move to a Node host once `AKR-4` adds a DB. |
 
 New dependencies require a one-line justification in this table. Adding paid infra, error tracking, analytics, or third-party payment/e-sign/credit providers requires **explicit CEO approval** — see `AGENTS.md`.
@@ -30,16 +30,16 @@ npm run dev        # http://localhost:3000
 
 ## Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Next dev server |
-| `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint (flat config, Next + Prettier rules) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run format` / `format:check` | Prettier write / check |
-| `npm test` | Vitest (once) |
-| `npm run test:watch` | Vitest watch mode |
+| Command                           | Description                                 |
+| --------------------------------- | ------------------------------------------- |
+| `npm run dev`                     | Next dev server                             |
+| `npm run build`                   | Production build                            |
+| `npm run start`                   | Serve the production build                  |
+| `npm run lint`                    | ESLint (flat config, Next + Prettier rules) |
+| `npm run typecheck`               | `tsc --noEmit`                              |
+| `npm run format` / `format:check` | Prettier write / check                      |
+| `npm test`                        | Vitest (once)                               |
+| `npm run test:watch`              | Vitest watch mode                           |
 
 ## CI
 
