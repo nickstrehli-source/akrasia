@@ -13,6 +13,9 @@ export default function HomePage() {
         <p style={{ color: "var(--muted)", marginTop: "0.75rem" }}>
           Real Estate Management, run by agents. Staging skeleton — no features yet.
         </p>
+        <p style={{ marginTop: "1.5rem" }}>
+          <a href="/login">Operator log in</a>
+        </p>
       </section>
     </main>
   );

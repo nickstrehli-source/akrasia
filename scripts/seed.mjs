@@ -1,11 +1,23 @@
 #!/usr/bin/env node
-// Deterministic demo seed for AKR-4.
+// Deterministic demo seed for AKR-4 (+ AKR-5 operator password).
 // Populates: 1 landlord operator, 2 properties, 4 units, 2 tenants, 2 active
 // leases, 1 open work order. Fixed UUIDs keep results reproducible across runs.
 
 import pg from "pg";
+import { randomBytes, scrypt as scryptCallback } from "node:crypto";
+import { promisify } from "node:util";
 
 const { Client } = pg;
+const scrypt = promisify(scryptCallback);
+
+// Mirrors src/lib/auth/password.ts. Duplicated (not imported) because this
+// script runs as plain Node/ESM with no TS build step.
+const DEMO_PASSWORD = "demo-password123";
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const derived = await scrypt(password, salt, 64);
+  return `${salt}:${derived.toString("hex")}`;
+}
 
 const IDS = {
   operatorOwner: "11111111-1111-4111-8111-111111111111",
@@ -49,11 +61,15 @@ try {
     await client.query(`DELETE FROM ${t}`);
   }
 
-  await client.query(`INSERT INTO operator (id, email, name) VALUES ($1, $2, $3)`, [
-    IDS.operatorOwner,
-    "owner@demo.akrasia.local",
-    "Demo Landlord",
-  ]);
+  await client.query(
+    `INSERT INTO operator (id, email, name, password_hash) VALUES ($1, $2, $3, $4)`,
+    [
+      IDS.operatorOwner,
+      "owner@demo.akrasia.local",
+      "Demo Landlord",
+      await hashPassword(DEMO_PASSWORD),
+    ],
+  );
 
   await client.query(
     `INSERT INTO property
@@ -132,6 +148,7 @@ try {
   console.log(
     "Seeded demo dataset: 1 operator, 2 properties, 4 units, 2 tenants, 2 active leases, 1 open work order.",
   );
+  console.log(`Demo login: owner@demo.akrasia.local / ${DEMO_PASSWORD}`);
 } catch (err) {
   await client.query("ROLLBACK");
   console.error("Seed failed:", err);
