@@ -36,3 +36,45 @@ jobs:
 
       - name: Test
         run: npm test
+
+  db:
+    name: migrations / seed
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: akrasia
+          POSTGRES_PASSWORD: akrasia
+          POSTGRES_DB: akrasia_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U akrasia -d akrasia_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DATABASE_URL: postgres://akrasia:akrasia@localhost:5432/akrasia_ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci
+
+      - name: Migrate up
+        run: npm run db:migrate:up
+
+      - name: Seed demo dataset
+        run: npm run db:seed
+
+      - name: Prove reversibility (down + up)
+        run: |
+          npm run db:migrate:down
+          npm run db:migrate:up
+          npm run db:seed
