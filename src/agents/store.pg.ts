@@ -198,4 +198,25 @@ export class PgTraceStore implements TraceStore {
     );
     return result.rows.map(toToolCallRecord);
   }
+
+  async listConfirmationLog(filter: AgentRunFilter): Promise<AgentToolCallRecord[]> {
+    const conditions: string[] = [`atc.irreversible = true`];
+    const params: unknown[] = [];
+    if (filter.operatorId) {
+      params.push(filter.operatorId);
+      conditions.push(`ar.operator_id = $${params.length}`);
+    }
+    if (filter.propertyId) {
+      params.push(filter.propertyId);
+      conditions.push(`ar.property_id = $${params.length}`);
+    }
+    const result = await query<AgentToolCallRow>(
+      `SELECT atc.* FROM agent_tool_call atc
+       JOIN agent_run ar ON ar.id = atc.agent_run_id
+       WHERE ${conditions.join(" AND ")}
+       ORDER BY atc.requested_at DESC`,
+      params,
+    );
+    return result.rows.map(toToolCallRecord);
+  }
 }

@@ -93,6 +93,13 @@ export class MemoryTraceStore implements TraceStore {
       .sort((a, b) => b.requestedAt.getTime() - a.requestedAt.getTime());
   }
 
+  async listConfirmationLog(filter: AgentRunFilter): Promise<AgentToolCallRecord[]> {
+    const runIds = new Set((await this.listAgentRuns(filter)).map((run) => run.id));
+    return [...this.calls.values()]
+      .filter((call) => call.irreversible && runIds.has(call.agentRunId))
+      .sort((a, b) => b.requestedAt.getTime() - a.requestedAt.getTime());
+  }
+
   private toolCallsFor(agentRunId: string): AgentToolCallRecord[] {
     return [...this.calls.values()]
       .filter((call) => call.agentRunId === agentRunId)

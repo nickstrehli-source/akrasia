@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionOperator, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { requirePropertyAccess, ForbiddenError } from "@/lib/auth/access";
 import { getPool } from "@/db/client";
+import { withRouteErrorLogging } from "@/lib/log";
 
 // Reference implementation of a property-scoped server action: every route
 // touching a specific property must resolve the session, then call
 // requirePropertyAccess before doing any read/write.
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGet(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await getSessionOperator(token);
@@ -35,3 +36,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
   return NextResponse.json(rows[0]);
 }
+
+export const GET = withRouteErrorLogging("properties/[id]#GET", handleGet);

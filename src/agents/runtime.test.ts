@@ -4,6 +4,7 @@ import {
   approveToolCall,
   getAgentRun,
   listAgentRuns,
+  listConfirmationLog,
   listPendingApprovals,
   rejectToolCall,
   runAgent,
@@ -285,5 +286,58 @@ describe("trace queries", () => {
       store,
     );
     expect(pendingForMismatchedScope).toHaveLength(0);
+  });
+
+  it("confirmation log includes decided calls, unlike listPendingApprovals", async () => {
+    const store = new MemoryTraceStore();
+    const notify = defineTool<Record<string, never>, { sent: boolean }>({
+      name: "confirmation.notify",
+      description: "irreversible",
+      irreversible: true,
+      handler: async () => ({ sent: true }),
+    });
+    registerAgent(
+      defineAgent({
+        name: "confirmation-agent",
+        description: "test",
+        scope: "confirmation.notify only",
+        tools: [notify],
+        run: async (ctx) => {
+          await ctx.callTool("confirmation.notify", {});
+        },
+      }),
+    );
+
+    const approvedRun = await runAgent({
+      agentName: "confirmation-agent",
+      operatorId: OPERATOR,
+      propertyId: PROPERTY,
+      store,
+    });
+    await approveToolCall(approvedRun.toolCalls[0].id, OPERATOR, { store });
+
+    const rejectedRun = await runAgent({
+      agentName: "confirmation-agent",
+      operatorId: OPERATOR,
+      propertyId: PROPERTY,
+      store,
+    });
+    await rejectToolCall(rejectedRun.toolCalls[0].id, OPERATOR, { store });
+
+    const pending = await listPendingApprovals(
+      { operatorId: OPERATOR, propertyId: PROPERTY },
+      store,
+    );
+    expect(pending).toHaveLength(0);
+
+    const confirmationLog = await listConfirmationLog(
+      { operatorId: OPERATOR, propertyId: PROPERTY },
+      store,
+    );
+    expect(confirmationLog).toHaveLength(2);
+    expect(confirmationLog.map((c) => c.status).sort()).toEqual(["completed", "rejected"]);
+
+    const scopedElsewhere = await listConfirmationLog({ propertyId: OTHER_PROPERTY }, store);
+    expect(scopedElsewhere).toHaveLength(0);
   });
 });

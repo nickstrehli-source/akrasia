@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionOperator, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 import { createInvite, InviteError } from "@/lib/auth/invite";
 import { ForbiddenError } from "@/lib/auth/access";
+import { withRouteErrorLogging } from "@/lib/log";
 
 // Existing operator invites a new operator to a chosen subset of the
 // properties they themselves have access to. No email provider is wired up
 // yet (that's a new vendor dependency — CEO sign-off first), so the invite
 // link is returned directly to the inviting operator to share by hand.
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await getSessionOperator(token);
   if (!session) {
@@ -46,3 +47,5 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 }
+
+export const POST = withRouteErrorLogging("operators/invite#POST", handlePost);

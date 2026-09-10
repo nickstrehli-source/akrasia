@@ -15,6 +15,7 @@ export {
   getAgentRun,
   listAgentRuns,
   listPendingApprovals,
+  listConfirmationLog,
 } from "./runtime";
 export { MemoryTraceStore } from "./store.memory";
 export { PgTraceStore } from "./store.pg";

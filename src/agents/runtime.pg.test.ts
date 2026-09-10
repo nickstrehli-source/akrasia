@@ -6,6 +6,7 @@ import {
   approveToolCall,
   getAgentRun,
   listAgentRuns,
+  listConfirmationLog,
   listPendingApprovals,
   runAgent,
 } from "./runtime";
@@ -88,5 +89,12 @@ describe.skipIf(!process.env.DATABASE_URL)("agent substrate — Postgres integra
 
     const pendingAfterApproval = await listPendingApprovals({ operatorId, propertyId }, store);
     expect(pendingAfterApproval.map((c) => c.id)).not.toContain(pending.id);
+
+    const confirmationLog = await listConfirmationLog({ operatorId, propertyId }, store);
+    expect(confirmationLog.map((c) => c.id)).toContain(pending.id);
+    expect(confirmationLog.find((c) => c.id === pending.id)).toMatchObject({
+      status: "completed",
+      reviewedByOperatorId: operatorId,
+    });
   });
 });

@@ -1,4 +1,4 @@
-# Core data model (AKR-4) + operator auth (AKR-5) + agent substrate (AKR-8)
+# Core data model (AKR-4) + operator auth (AKR-5) + agent substrate (AKR-8) + observability (AKR-10)
 
 Boring Postgres. Migrations live in `../../migrations/`, are run by
 `node-pg-migrate`, and every migration file exports both `up` and `down`.
@@ -114,6 +114,17 @@ definition at call time. For a `pending_approval` row, `output` is null and
 the underlying tool handler has **not** run — see "Agent orchestration
 substrate" below.
 
+### system_log (AKR-10)
+
+Catch-all for server errors that aren't already captured by `agent_run` /
+`agent_tool_call` (those two already carry their own `error` column from the
+AKR-8 substrate). Written by `logServerEvent` (`src/lib/log.ts`), which never
+throws — a logging failure must not take down the request that triggered
+it. `withRouteErrorLogging` wraps a route handler so any error that escapes
+its own try/catch is captured here and turned into a generic 500. Append-only,
+no deletes; `property_id` is `SET NULL` on property deletion since the log
+entry itself is still worth keeping.
+
 ## Agent orchestration substrate (AKR-8)
 
 Code lives in `src/agents/`. Agents are defined in code (`defineAgent`) with
@@ -142,6 +153,29 @@ multi-step agent workflow needs it (out of scope for this issue; see
 AGENTS.md non-goals — no real agent workflow ships here, only the
 substrate + a dummy smoke-test agent).
 
+## Observability (AKR-10)
+
+- **Trace view** (`/dashboard/runs`, `/dashboard/runs/[id]`): lists an
+  operator's agent runs per property and renders one run's full trace (tool
+  calls, inputs/outputs, decisions, elapsed time). A viewer not scoped to the
+  run's property (`requirePropertyAccess`) can still open it for debugging,
+  but `src/lib/redact.ts` masks likely tenant-PII fields (email, phone, ssn,
+  dob, tenant-prefixed keys) in the input/output JSON first — a key-name
+  heuristic, not a schema-aware redactor, since tool payloads are arbitrary
+  per-tool JSON. See AGENTS.md non-goals — no PII exports.
+- **Confirmation-gate log** (`/dashboard/confirmations`): every irreversible
+  tool call for a property regardless of status, via
+  `TraceStore.listConfirmationLog` — the full history, unlike
+  `listPendingApprovals`'s open queue.
+- **Health dashboard** (`/admin/health`): run count, failure rate, and
+  mean/p95 run duration from `src/lib/observability.ts`'s `getHealthStats`,
+  all-time (not windowed — demo volume is too low for a window to show
+  anything). No paid vendor per AGENTS.md non-goals.
+- **Unified log surface**: `listRecentLogEntries` merges `system_log` with
+  failed `agent_run`/`agent_tool_call` rows in application code (three
+  simple queries, not one UNION across differently-shaped tables) so server
+  errors and agent-loop/tool-call failures show up in one place.
+
 ## Delete semantics
 
 | Table               | Deletion              | Notes                                                                                                            |
@@ -158,6 +192,7 @@ substrate + a dummy smoke-test agent).
 | `operator_invite`   | No delete (yet)       | Rows accumulate in accepted/expired state; a cleanup job is a future nice-to-have, not a correctness requirement |
 | `agent_run`         | **No delete**         | Append-only trace log                                                                                            |
 | `agent_tool_call`   | **No delete**         | Append-only tool call log; status transitions in place                                                           |
+| `system_log`        | **No delete**         | Append-only; `property_id` SET NULL on property deletion                                                         |
 
 App-layer queries against soft-deleted tables MUST filter
 `deleted_at IS NULL` unless explicitly building an audit view.

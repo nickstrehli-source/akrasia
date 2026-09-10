@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { acceptInvite, InviteError } from "@/lib/auth/invite";
 import { createSession, sessionCookieOptions, SESSION_COOKIE_NAME } from "@/lib/auth/session";
+import { errorMessage, logServerEvent } from "@/lib/log";
 
 export async function POST(request: NextRequest) {
   const form = await request.formData();
@@ -15,7 +16,11 @@ export async function POST(request: NextRequest) {
     response.cookies.set(SESSION_COOKIE_NAME, sessionToken, sessionCookieOptions(expiresAt));
     return response;
   } catch (err) {
-    const message = err instanceof InviteError ? err.message : "Signup failed";
+    const isInviteError = err instanceof InviteError;
+    if (!isInviteError) {
+      await logServerEvent({ level: "error", source: "auth/signup", message: errorMessage(err) });
+    }
+    const message = isInviteError ? err.message : "Signup failed";
     const url = new URL("/signup", request.url);
     url.searchParams.set("token", token);
     url.searchParams.set("error", message);

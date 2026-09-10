@@ -252,3 +252,10 @@ export async function listPendingApprovals(
 ): Promise<AgentToolCallRecord[]> {
   return store.listPendingApprovals(filter);
 }
+
+export async function listConfirmationLog(
+  filter: AgentRunFilter,
+  store: TraceStore = getDefaultStore(),
+): Promise<AgentToolCallRecord[]> {
+  return store.listConfirmationLog(filter);
+}

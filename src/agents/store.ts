@@ -53,4 +53,11 @@ export interface TraceStore {
   getAgentRun(agentRunId: string): Promise<AgentRunTrace | null>;
   listAgentRuns(filter: AgentRunFilter): Promise<AgentRunTrace[]>;
   listPendingApprovals(filter: AgentRunFilter): Promise<AgentToolCallRecord[]>;
+  /**
+   * The confirmation-gate audit log: every irreversible tool call regardless
+   * of status (pending/completed/failed/rejected), with reviewer + timing.
+   * Unlike `listPendingApprovals`, this is the full history, not just the
+   * open queue.
+   */
+  listConfirmationLog(filter: AgentRunFilter): Promise<AgentToolCallRecord[]>;
 }

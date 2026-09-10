@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSessionOperator, SESSION_COOKIE_NAME } from "@/lib/auth/session";
@@ -32,6 +33,19 @@ export default async function DashboardPage() {
           ))}
         </ul>
       )}
+
+      <h2>Observability</h2>
+      <ul>
+        <li>
+          <Link href="/dashboard/runs">Agent runs</Link>
+        </li>
+        <li>
+          <Link href="/dashboard/confirmations">Confirmation-gate log</Link>
+        </li>
+        <li>
+          <Link href="/admin/health">Staging health</Link>
+        </li>
+      </ul>
 
       <h2>Invite an operator</h2>
       <form
