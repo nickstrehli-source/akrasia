@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // DB-backed auth tests share one Postgres and TRUNCATE between cases;
+    // running test files in parallel would race those truncations.
+    fileParallelism: false,
   },
   resolve: {
     alias: {
