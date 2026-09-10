@@ -1,0 +1,36 @@
+# deps
+node_modules/
+.pnp
+.pnp.*
+
+# builds
+.next/
+out/
+build/
+dist/
+
+# test / coverage
+coverage/
+
+# env
+.env
+.env.*
+!.env.example
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# tsc
+*.tsbuildinfo
+next-env.d.ts.timestamp
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# per-machine tool state
+.claude/
