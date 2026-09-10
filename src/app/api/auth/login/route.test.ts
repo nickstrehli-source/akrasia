@@ -8,7 +8,11 @@ import { createOperator } from "@/test/fixtures";
 function loginRequest(email: string, password: string) {
   return new NextRequest("http://localhost/api/auth/login", {
     method: "POST",
-    body: new URLSearchParams({ email, password }),
+    // Stringify rather than passing the URLSearchParams instance directly —
+    // undici's Request constructor does an `instanceof` check against its
+    // own realm's URLSearchParams, which fails under Vitest's jsdom
+    // environment (a different global than Node's).
+    body: new URLSearchParams({ email, password }).toString(),
     headers: { "content-type": "application/x-www-form-urlencoded" },
   });
 }

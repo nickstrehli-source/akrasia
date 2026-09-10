@@ -9,7 +9,11 @@ import { createOperator, createProperty, grantAccess } from "@/test/fixtures";
 function signupRequest(token: string, name: string, password: string) {
   return new NextRequest("http://localhost/api/auth/signup", {
     method: "POST",
-    body: new URLSearchParams({ token, name, password }),
+    // Stringify rather than passing the URLSearchParams instance directly —
+    // undici's Request constructor does an `instanceof` check against its
+    // own realm's URLSearchParams, which fails under Vitest's jsdom
+    // environment (a different global than Node's).
+    body: new URLSearchParams({ token, name, password }).toString(),
     headers: { "content-type": "application/x-www-form-urlencoded" },
   });
 }

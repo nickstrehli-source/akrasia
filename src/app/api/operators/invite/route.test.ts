@@ -14,7 +14,11 @@ function inviteRequest(body: URLSearchParams, cookie?: string) {
   if (cookie) headers.cookie = `${SESSION_COOKIE_NAME}=${cookie}`;
   return new NextRequest("http://localhost/api/operators/invite", {
     method: "POST",
-    body,
+    // Stringify rather than passing the URLSearchParams instance directly —
+    // undici's Request constructor does an `instanceof` check against its
+    // own realm's URLSearchParams, which fails under Vitest's jsdom
+    // environment (a different global than Node's).
+    body: body.toString(),
     headers,
   });
 }
